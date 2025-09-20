@@ -1,18 +1,24 @@
 import Head from 'next/head';
-import EEGDashboard from '../components/EEGDashboard';
+import dynamic from 'next/dynamic';
+
+// Dynamically import to avoid SSR issues with Chart.js
+const EnhancedEEGDashboard = dynamic(
+  () => import('../components/EnhancedEEGDashboard'),
+  { ssr: false }
+);
 
 export default function Home() {
   return (
     <>
       <Head>
-        <title>EEG Real-Time Dashboard</title>
-        <meta name="description" content="Real-time EEG data visualization from OpenBCI Cyton+Daisy" />
+        <title>Advanced EEG Love Detection System</title>
+        <meta name="description" content="Real-time EEG analysis for love at first sight detection" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
       <main>
-        <EEGDashboard />
+        <EnhancedEEGDashboard />
       </main>
 
       <style jsx global>{`

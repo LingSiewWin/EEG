@@ -2,6 +2,7 @@
 """
 REAL OpenBCI WebSocket Server - NO FAKE DATA
 Based on CORRECT_SCALE.py which ACTUALLY WORKS
+With EEG analysis for love detection
 """
 import serial
 import time
@@ -10,6 +11,8 @@ import asyncio
 import websockets
 import threading
 import queue
+import numpy as np
+from eeg_processor import EEGProcessor
 
 class RealOpenBCIServer:
     def __init__(self):

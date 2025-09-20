@@ -1,1 +1,1 @@
-self.__REACT_LOADABLE_MANIFEST="{}"
+self.__REACT_LOADABLE_MANIFEST="{\"pages/index.js -> ../components/EnhancedEEGDashboard\":{\"id\":\"pages/index.js -> ../components/EnhancedEEGDashboard\",\"files\":[\"static/chunks/components_EnhancedEEGDashboard_js.js\"]}}"

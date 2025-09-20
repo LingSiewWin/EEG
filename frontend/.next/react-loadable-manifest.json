@@ -1,1 +1,8 @@
-{}
+{
+  "pages/index.js -> ../components/EnhancedEEGDashboard": {
+    "id": "pages/index.js -> ../components/EnhancedEEGDashboard",
+    "files": [
+      "static/chunks/components_EnhancedEEGDashboard_js.js"
+    ]
+  }
+}
