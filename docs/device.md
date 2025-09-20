@@ -1,0 +1,1 @@
+Device Model Headset: OpenBCI Ultracortex Mark IV EEG Headset Electronics Board: OpenBCI Cyton + Daisy Boards Key Specifications Channels: 16 channels Configuration: Pro-Assembled Size: Medium Type: 3D-printable, open-source EEG headset Function: Holds the biosensing boards and electrodes for EEG data acquisition.
