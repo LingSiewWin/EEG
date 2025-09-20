@@ -2,8 +2,8 @@ import Head from 'next/head';
 import dynamic from 'next/dynamic';
 
 // Dynamically import to avoid SSR issues with Chart.js
-const EnhancedEEGDashboard = dynamic(
-  () => import('../components/EnhancedEEGDashboard'),
+const EEGDashboard = dynamic(
+  () => import('../components/EEGDashboard'),
   { ssr: false }
 );
 
@@ -18,7 +18,7 @@ export default function Home() {
       </Head>
 
       <main>
-        <EnhancedEEGDashboard />
+        <EEGDashboard />
       </main>
 
       <style jsx global>{`
