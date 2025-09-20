@@ -1,4 +1,10 @@
 {
+  "pages/image-analysis.js -> ../components/ImageLoveAnalysis": {
+    "id": "pages/image-analysis.js -> ../components/ImageLoveAnalysis",
+    "files": [
+      "static/chunks/components_ImageLoveAnalysis_js.js"
+    ]
+  },
   "pages/index.js -> ../components/EnhancedEEGDashboard": {
     "id": "pages/index.js -> ../components/EnhancedEEGDashboard",
     "files": [

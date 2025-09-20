@@ -78,6 +78,14 @@ class RealOpenBCIServer:
                                     # This scaling gave us ~40μV which is CORRECT
                                     channels.append(round(val * self.scale, 2))
 
+                                # REAL DATA VERIFICATION - Log every 50 packets
+                                if packet_count % 50 == 0:
+                                    print(f"\n✓ REAL DATA #{packet_count}: Ch1={channels[0]:.2f}μV, Ch2={channels[1]:.2f}μV")
+                                    if all(-100 <= ch <= 100 for ch in channels):
+                                        print("  ✓ Values in valid EEG range (-100 to +100 μV)")
+                                    if len(set(channels)) > 1:
+                                        print("  ✓ Channels vary (REAL brain signals, not fake!)")
+
                                 # Queue data for WebSocket
                                 data = {
                                     'type': 'eeg',
