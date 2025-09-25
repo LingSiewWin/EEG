@@ -472,9 +472,8 @@ react-chartjs-2    # React Chart.js wrapper
 - [ ] Deploy smart contracts
 - [ ] Frontend build optimization
 
-## 📞 Contact & Support
+## Debug
 
-Hardware issues: Check OpenBCI documentation
 WebSocket issues: See `backend/server.py` connection handler
 Frontend issues: Check browser console for errors
 
