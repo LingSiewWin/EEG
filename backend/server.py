@@ -25,6 +25,10 @@ class RealOpenBCIServer:
         self.is_streaming = False
         self.ser = None
 
+        # Initialize scientific EEG processor
+        self.eeg_processor = EEGProcessor(sampling_rate=250)
+        print("✓ Scientific EEG processor initialized")
+
     def connect_hardware(self):
         """Connect to REAL OpenBCI hardware"""
         try:
@@ -116,7 +120,7 @@ class RealOpenBCIServer:
                 break
 
     async def websocket_handler(self, websocket):
-        """Handle WebSocket connections from frontend"""
+        """Handle WebSocket connections and analysis requests from frontend"""
         self.clients.add(websocket)
         print(f"✓ Frontend connected (Total clients: {len(self.clients)})")
 
@@ -124,14 +128,107 @@ class RealOpenBCIServer:
         await websocket.send(json.dumps({
             'type': 'status',
             'connected': self.is_streaming,
-            'message': 'OpenBCI streaming' if self.is_streaming else 'Not connected'
+            'message': 'OpenBCI streaming with scientific analysis ready' if self.is_streaming else 'Not connected'
         }))
 
         try:
-            await websocket.wait_closed()
+            # Listen for analysis requests
+            async for message in websocket:
+                try:
+                    request = json.loads(message)
+                    await self.handle_analysis_request(websocket, request)
+                except Exception as e:
+                    print(f"Error handling message: {e}")
+
+        except Exception as e:
+            print(f"WebSocket error: {e}")
         finally:
             self.clients.remove(websocket)
             print(f"Frontend disconnected (Remaining: {len(self.clients)})")
+
+    async def handle_analysis_request(self, websocket, request):
+        """Handle analysis requests using scientific EEG processing"""
+        if request.get('type') == 'analyze':
+            print("🧠 Received analysis request - using SCIENTIFIC backend processing...")
+
+            # Extract EEG data from request
+            eeg_samples = request.get('data', [])
+            if not eeg_samples:
+                await websocket.send(json.dumps({
+                    'type': 'error',
+                    'message': 'No EEG data provided for analysis'
+                }))
+                return
+
+            print(f"📊 Analyzing {len(eeg_samples)} EEG samples using neuroscience algorithms...")
+
+            try:
+                # Convert to format expected by processor (channels x samples)
+                channels_data = []
+                for ch in range(8):  # 8 channels
+                    channel_samples = [sample['channels'][ch] for sample in eeg_samples if len(sample.get('channels', [])) > ch]
+                    channels_data.append(np.array(channel_samples))
+
+                # Use SCIENTIFIC analysis from backend
+                love_analysis = self.eeg_processor.calculate_love_score(channels_data)
+                frequency_analysis = self.eeg_processor.get_frequency_summary(channels_data)
+
+                print(f"✅ Scientific analysis complete: Love Score = {love_analysis['love_score']}")
+                print(f"   📈 FAA: {love_analysis['raw_values']['faa']:.4f}")
+                print(f"   ⚡ Arousal: {love_analysis['raw_values']['avg_arousal']:.2f}")
+                print(f"   👁️ P300: {love_analysis['raw_values']['p300_amplitude']:.2f}")
+
+                # Send scientific results back to frontend
+                await websocket.send(json.dumps({
+                    'type': 'analysis',
+                    'love_analysis': love_analysis,
+                    'frequency_summary': frequency_analysis,
+                    'method': 'scientific_backend',
+                    'validation': {
+                        'samples_analyzed': len(eeg_samples),
+                        'channels_used': len(channels_data),
+                        'processing_method': 'neuroscience_algorithms'
+                    }
+                }))
+
+            except Exception as e:
+                print(f"❌ Scientific analysis failed: {e}")
+                await websocket.send(json.dumps({
+                    'type': 'error',
+                    'message': f'Analysis failed: {str(e)}'
+                }))
+
+        elif request.get('type') == 'get_algorithm_info':
+            # Send algorithm information for justification
+            await websocket.send(json.dumps({
+                'type': 'algorithm_info',
+                'scientific_basis': {
+                    'frontal_alpha_asymmetry': {
+                        'weight': 0.4,
+                        'method': 'log(right_alpha_power) - log(left_alpha_power)',
+                        'research': 'Davidson & Fox (1989), Harmon-Jones & Allen (1997)',
+                        'justification': 'Left frontal activation indicates approach motivation (attraction)'
+                    },
+                    'arousal_detection': {
+                        'weight': 0.3,
+                        'method': 'Beta (12-30Hz) + Gamma (30-45Hz) power',
+                        'research': 'Keil et al. (2001), Ray & Cole (1985)',
+                        'justification': 'High-frequency activity correlates with emotional arousal'
+                    },
+                    'attention_p300': {
+                        'weight': 0.3,
+                        'method': 'Peak amplitude 250-400ms post-stimulus',
+                        'research': 'Polich (2007), Schupp et al. (2000)',
+                        'justification': 'Larger P300 indicates emotional significance and attention'
+                    }
+                },
+                'validation_notes': [
+                    'Algorithm based on peer-reviewed neuroscience research',
+                    'Multi-component approach increases reliability',
+                    'Individual baseline calibration recommended for production',
+                    'Short-term analysis (5s) captures immediate emotional response'
+                ]
+            }))
 
     async def broadcast_data(self):
         """Send REAL data to all connected frontends"""

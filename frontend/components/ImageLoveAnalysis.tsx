@@ -276,39 +276,109 @@ const ImageLoveAnalysis: React.FC<ImageLoveAnalysisProps> = () => {
   };
 
   const analyzeAllImages = () => {
-    console.log('Analyzing all images...');
+    console.log('🔬 Starting SCIENTIFIC analysis of all images...');
     const results: ImageResult[] = [];
+    let completedAnalyses = 0;
 
+    // Set up listener for analysis results
+    const originalOnMessage = wsRef.current?.onmessage;
+    if (wsRef.current) {
+      wsRef.current.onmessage = (event) => {
+        // Call original handler first
+        if (originalOnMessage) {
+          originalOnMessage.call(wsRef.current, event);
+        }
+
+        try {
+          const data = JSON.parse(event.data);
+          if (data.type === 'analysis' && data.metadata?.context === 'image_analysis') {
+            const imageIndex = data.metadata.image_index;
+            console.log(`📊 Received scientific analysis for Image ${imageIndex + 1}`);
+
+            const result: ImageResult = {
+              imageIndex: imageIndex,
+              imagePath: data.metadata.image_path,
+              loveScore: data.love_analysis.love_score,
+              category: data.love_analysis.category,
+              avgAmplitude: data.love_analysis.avgAmplitude,
+              frontalAsymmetry: data.love_analysis.components.frontal_asymmetry,
+              packets: data.validation?.samples_analyzed || 0
+            };
+
+            results[imageIndex] = result;
+            completedAnalyses++;
+
+            // Check if all analyses are complete
+            if (completedAnalyses === images.length) {
+              console.log('✅ All scientific analyses complete!');
+
+              // Find winner
+              const winner = results.reduce((max, curr) =>
+                parseFloat(curr.loveScore) > parseFloat(max.loveScore) ? curr : max, results[0]);
+
+              setImageResults(results);
+              setCurrentImageIndex(-1);
+              setIsAnalyzing(false);
+              setShowFinalResults(true);
+
+              console.log('🏆 Scientific analysis results:', results);
+              console.log('🏅 Winner:', winner);
+
+              // Restore original message handler
+              if (wsRef.current) {
+                wsRef.current.onmessage = originalOnMessage;
+              }
+            }
+          }
+        } catch (error) {
+          console.error('Error parsing analysis result:', error);
+        }
+      };
+    }
+
+    // Send analysis requests for each image
     for (let i = 0; i < images.length; i++) {
       const imageData = capturedDataRef.current[i] || [];
 
       if (imageData.length === 0) {
-        results.push({
+        results[i] = {
           imageIndex: i,
           imagePath: images[i],
           loveScore: '0',
           category: 'No data',
           packets: 0
-        });
+        };
+        completedAnalyses++;
         continue;
       }
 
-      // Analyze each image's EEG data
-      const analysis = analyzeImageData(imageData, i);
-      results.push(analysis);
+      // Send to backend for scientific analysis
+      if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+        const analysisRequest = {
+          type: 'analyze',
+          data: imageData,
+          metadata: {
+            image_index: i,
+            image_path: images[i],
+            capture_duration: 5,
+            context: 'image_analysis'
+          }
+        };
+
+        wsRef.current.send(JSON.stringify(analysisRequest));
+        console.log(`✅ Image ${i + 1} sent to scientific backend`);
+      } else {
+        // Fallback if backend unavailable
+        results[i] = {
+          imageIndex: i,
+          imagePath: images[i],
+          loveScore: '50.0',
+          category: 'Backend unavailable',
+          packets: imageData.length
+        };
+        completedAnalyses++;
+      }
     }
-
-    // Find winner
-    const winner = results.reduce((max, curr) =>
-      parseFloat(curr.loveScore) > parseFloat(max.loveScore) ? curr : max, results[0]);
-
-    setImageResults(results);
-    setCurrentImageIndex(-1);
-    setIsAnalyzing(false);
-    setShowFinalResults(true);
-
-    console.log('Analysis complete!', results);
-    console.log('Winner:', winner);
   };
 
   const analyzeImageData = (imageData: EEGSample[], imageIndex: number): ImageResult => {
@@ -503,7 +573,10 @@ const ImageLoveAnalysis: React.FC<ImageLoveAnalysisProps> = () => {
       {showFinalResults && imageResults.length > 0 && (
         <div style={{ marginBottom: '20px' }}>
           <div style={{ backgroundColor: 'white', borderRadius: '8px', padding: '20px', marginBottom: '20px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
-            <h2 style={{ color: '#333', marginBottom: '20px' }}>🏆 Analysis Results - Which Image Won Your Heart?</h2>
+            <h2 style={{ color: '#333', marginBottom: '20px' }}>🏆 Scientific Analysis Results - Which Image Won Your Heart?</h2>
+            <div style={{ fontSize: '12px', color: '#666', marginBottom: '15px' }}>
+              🔬 Analyzed using neuroscience algorithms: Frontal Alpha Asymmetry, P300 attention response, and Beta/Gamma arousal detection
+            </div>
 
             {/* Winner Highlight */}
             {(() => {

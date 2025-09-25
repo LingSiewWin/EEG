@@ -176,9 +176,26 @@ const EnhancedEEGDashboard: React.FC<EEGDashboardProps> = () => {
               setCapturedData(prev => [...prev, sample]);
             }
           } else if (data.type === 'analysis') {
-            // Receive analysis results
+            // Receive SCIENTIFIC analysis results from backend
+            console.log('🔬 Received SCIENTIFIC analysis from backend:', data);
+            console.log('📊 Method used:', data.method || 'scientific_backend');
+
+            if (data.validation) {
+              console.log('✅ Analysis validation:', data.validation);
+            }
+
             setLoveAnalysis(data.love_analysis);
             setFrequencySummary(data.frequency_summary);
+          } else if (data.type === 'algorithm_info') {
+            // Log scientific justification
+            console.log('🧪 SCIENTIFIC ALGORITHM JUSTIFICATION:');
+            console.log('📚 Research-based components:', data.scientific_basis);
+            console.log('⚠️  Validation notes:', data.validation_notes);
+          } else if (data.type === 'error') {
+            console.error('❌ Backend analysis error:', data.message);
+            alert(`Analysis failed: ${data.message}`);
+            setShowResults(false);
+            showResultsRef.current = false;
           }
         } catch (error) {
           console.error('Error parsing WebSocket data:', error);
@@ -290,7 +307,7 @@ const EnhancedEEGDashboard: React.FC<EEGDashboardProps> = () => {
       return;
     }
 
-    console.log(`Analyzing ${dataToAnalyze.length} packets...`);
+    console.log(`🧠 Sending ${dataToAnalyze.length} packets to SCIENTIFIC backend for analysis...`);
 
     // Log proof this is REAL data from your device
     console.log('🧠 REAL DATA VERIFICATION:');
@@ -307,102 +324,34 @@ const EnhancedEEGDashboard: React.FC<EEGDashboardProps> = () => {
       console.log(`  ✓ Signal varies naturally (${uniqueValues.size} unique values) - CONFIRMED REAL EEG!`);
     }
 
-    // Calculate channel averages and statistics
-    const channelStats: ChannelStats[] = [];
-    const frequencyBands: FrequencyBand[] = [];
+    // 🔬 SEND TO SCIENTIFIC BACKEND FOR ANALYSIS
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+      console.log('📡 Sending to backend for SCIENTIFIC analysis (FAA, P300, Beta/Gamma)...');
 
-    for (let ch = 0; ch < 8; ch++) {
-      const channelData = dataToAnalyze.map(sample => sample.channels[ch] || 0);
-
-      // Calculate statistics
-      const mean = channelData.reduce((a, b) => a + b, 0) / channelData.length;
-      const absValues = channelData.map(v => Math.abs(v));
-      const avgAmplitude = absValues.reduce((a, b) => a + b, 0) / absValues.length;
-      const maxAmp = Math.max(...absValues);
-      const minAmp = Math.min(...channelData);
-
-      channelStats.push({
-        channel: ch + 1,
-        mean: mean.toFixed(2),
-        avgAmplitude: avgAmplitude,
-        max: maxAmp.toFixed(2),
-        min: minAmp.toFixed(2)
-      });
-
-      // Simple frequency estimation (placeholder for real FFT)
-      // Count zero crossings for dominant frequency
-      let zeroCrossings = 0;
-      for (let i = 1; i < channelData.length; i++) {
-        if ((channelData[i-1] < 0 && channelData[i] > 0) ||
-            (channelData[i-1] > 0 && channelData[i] < 0)) {
-          zeroCrossings++;
+      const analysisRequest = {
+        type: 'analyze',
+        data: dataToAnalyze,
+        metadata: {
+          capture_duration: 5,
+          sampling_rate: 250,
+          channels: 8,
+          frontend_verification: {
+            samples_count: dataToAnalyze.length,
+            ch1_average: avgCh1,
+            signal_variance: uniqueValues.size
+          }
         }
-      }
+      };
 
-      const dominantFreq = (zeroCrossings / 2) / 5; // Crossings to Hz over 5 seconds
+      wsRef.current.send(JSON.stringify(analysisRequest));
+      console.log('✅ Analysis request sent to scientific backend!');
 
-      // Estimate band powers based on amplitude and frequency
-      frequencyBands.push({
-        channel: `Ch${ch + 1}`,
-        bands: {
-          delta: dominantFreq < 4 ? avgAmplitude * 0.8 : avgAmplitude * 0.1,
-          theta: dominantFreq >= 4 && dominantFreq < 8 ? avgAmplitude * 0.8 : avgAmplitude * 0.1,
-          alpha: dominantFreq >= 8 && dominantFreq < 12 ? avgAmplitude * 0.8 : avgAmplitude * 0.2,
-          beta: dominantFreq >= 12 && dominantFreq < 30 ? avgAmplitude * 0.8 : avgAmplitude * 0.2,
-          gamma: dominantFreq >= 30 ? avgAmplitude * 0.8 : avgAmplitude * 0.1
-        }
-      });
+    } else {
+      console.error('❌ WebSocket not connected - cannot send to scientific backend');
+      alert('Connection lost. Please refresh and try again.');
+      setShowResults(false);
+      showResultsRef.current = false;
     }
-
-    // Calculate love score based on neuroscience
-    // Frontal asymmetry (Ch1-Fp1 vs Ch2-Fp2)
-    const leftFrontal = channelStats[0].avgAmplitude;
-    const rightFrontal = channelStats[1].avgAmplitude;
-    const frontalAsymmetry = (rightFrontal - leftFrontal) / (rightFrontal + leftFrontal);
-
-    // Average amplitude as arousal indicator
-    const avgAmp = channelStats.reduce((sum, ch) => sum + ch.avgAmplitude, 0) / 8;
-
-    // Calculate love score
-    let loveScore = 50; // Base score
-
-    // Positive frontal asymmetry = approach motivation
-    if (frontalAsymmetry > 0) {
-      loveScore += frontalAsymmetry * 30; // Up to +30 points
-    }
-
-    // Higher amplitude = more arousal
-    if (avgAmp > 20) loveScore += 10;
-    if (avgAmp > 40) loveScore += 15;
-    if (avgAmp > 60) loveScore += 15;
-
-    loveScore = Math.min(100, Math.max(0, loveScore));
-
-    // Determine category
-    let category = '';
-    if (loveScore >= 80) category = 'Love at First Sight! 💘';
-    else if (loveScore >= 60) category = 'Strong Attraction 💕';
-    else if (loveScore >= 40) category = 'Interested 💗';
-    else if (loveScore >= 20) category = 'Neutral 😐';
-    else category = 'Not Interested 💔';
-
-    // Set results
-    setLoveAnalysis({
-      love_score: loveScore.toFixed(1),
-      category: category,
-      avgAmplitude: avgAmp.toFixed(2),
-      packets: dataToAnalyze.length,
-      components: {
-        frontal_asymmetry: (50 + frontalAsymmetry * 50).toFixed(1),
-        arousal: Math.min(100, avgAmp * 1.5).toFixed(1),
-        attention_p300: (avgAmp > 40 ? 75 : 40).toFixed(1)
-      }
-    });
-
-    // Set frequency summary
-    setFrequencySummary(frequencyBands);
-
-    console.log('Analysis complete!', { loveScore, avgAmp, frontalAsymmetry });
   };
 
   const getStatusColor = (): string => {
@@ -514,7 +463,10 @@ const EnhancedEEGDashboard: React.FC<EEGDashboardProps> = () => {
           {/* Love Analysis Results */}
           {loveAnalysis && (
             <div style={{ marginBottom: '20px', padding: '20px', backgroundColor: 'white', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)', border: '2px solid #4CAF50' }}>
-              <h2 style={{ color: '#333', marginBottom: '15px' }}>💘 Love at First Sight Analysis</h2>
+              <h2 style={{ color: '#333', marginBottom: '15px' }}>💘 Scientific Love Detection Results</h2>
+              <div style={{ fontSize: '12px', color: '#666', marginBottom: '10px' }}>
+                🔬 Analyzed using neuroscience algorithms (FAA, P300, Beta/Gamma)
+              </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                 <div>
                   <div style={{ fontSize: '48px', fontWeight: 'bold', color: '#4CAF50' }}>
