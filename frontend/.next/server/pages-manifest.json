@@ -1,6 +1,1 @@
-{
-  "/_document": "pages/_document.js",
-  "/_error": "pages/_error.js",
-  "/_app": "pages/_app.js",
-  "/image-analysis": "pages/image-analysis.js"
-}
+{"/image-analysis":"pages/image-analysis.html","/":"pages/index.html","/_app":"pages/_app.js","/_error":"pages/_error.js","/_document":"pages/_document.js","/404":"pages/404.html"}

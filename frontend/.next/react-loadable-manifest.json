@@ -1,8 +1,18 @@
 {
-  "pages/image-analysis.js -> ../components/ImageLoveAnalysis": {
-    "id": "pages/image-analysis.js -> ../components/ImageLoveAnalysis",
+  "pages/image-analysis.tsx -> ../components/ImageLoveAnalysis": {
+    "id": 1233,
     "files": [
-      "static/chunks/components_ImageLoveAnalysis_js.js"
+      "static/chunks/ee8b1517.fc79cde7703f7d35.js",
+      "static/chunks/421.06bcc4472e28db63.js",
+      "static/chunks/233.00d9ebeb018a20d2.js"
+    ]
+  },
+  "pages/index.tsx -> ../components/EEGDashboard": {
+    "id": 8418,
+    "files": [
+      "static/chunks/ee8b1517.fc79cde7703f7d35.js",
+      "static/chunks/421.06bcc4472e28db63.js",
+      "static/chunks/418.41bcedad8158db2e.js"
     ]
   }
 }
