@@ -1,4 +1,4 @@
-# EEG Love Detection System - Web3 Hackathon Ready 🚀
+# EEG Love Detection System 
 
 Real-time brain data streaming and analysis system using OpenBCI hardware for emotional response detection with zkProof integration potential. **Now TypeScript-ready for professional web3 development.**
 
